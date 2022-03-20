@@ -24,17 +24,20 @@ int main() {
   points.emplace_back(Eigen::Vector3d{33, 22, 6});
   points.emplace_back(Eigen::Vector3d{133, 222, -96});
 
+  ///1.非线性求解器
   Solver solver;
-  ///位姿参数: 旋转（四元数） + 平移，共七维
+  ///2.向求解器中添加位姿参数: 旋转（四元数） + 平移，共global 七维, local 6维
   std::shared_ptr<PoseParameter> pose_parameter =
       std::make_shared<PoseParameter>(q_plus_delta, Eigen::Vector3d{0.1,-0.1,0.2});
   solver.AddParams(pose_parameter);
+  ///3.向求解器中添加残差因子
   for(auto &pt: points){
     Factor::Ptr f = std::make_shared<PointPointFactor>(pt, pt);
     solver.AddFactor(f);
   }
+  ///4.开始迭代求解
   solver.run(11);
-
+  ///5.优化后的参数
   auto parameters = pose_parameter->GetParams();
   std::cout<<"parameters_"<<std::endl;
 
@@ -42,7 +45,8 @@ int main() {
     std::cout<<", "<<parameters[i];
   }
 
-//
+  std::cout<<std::endl;
+
   Eigen::Map<Eigen::Quaterniond> rotation(parameters);
   Eigen::Map<Eigen::Vector3d> trans(parameters+4);
 
